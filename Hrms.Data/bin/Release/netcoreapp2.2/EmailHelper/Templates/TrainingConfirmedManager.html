@@ -1,0 +1,48 @@
+﻿<div style="margin: auto; font-family: sans-serif; color: #333; max-width: 700px; padding: 2rem; box-shadow: 0px 20px 50px rgba(0,0,0,0.05);">
+    <div class="container" style="font-weight: 500; font-style: italic">
+        <div>
+            <div>
+                Dear {{name}}
+                <br />
+                <br />
+                <div>
+                    As per the training calendar we have nominated  your reportee(s) for the below Program.
+                </div>
+                <br />
+                <div>
+                    Please share your acceptance in the HRMS portal.
+                </div>
+            </div>
+            <br />
+            <div style="margin-top:20px">
+                <b>Training information</b>
+                <br />
+                <div>
+                    <div>Training Name: {{trainingName}}</div>
+                    <br />
+                    <div style="color: #FF0000"><strong>{{trainingDescription}}</strong></div>
+
+                    <br />
+                    <br />
+
+                    <div><b>Eligibility Criteria</b></div>
+                    <div>Grades: {{trainingGrades}}</div>
+                    <div>Departments: {{trainingDepartments}}</div>
+                    <div>Designations: {{trainingDesignations}}</div>
+                </div>
+                <br />
+                <div style="margin-top:10px">
+                    <div><b>Schedule</b></div>
+                    <div>Date: {{trainingDate}}</div>
+                    <div>Time: {{trainingTime}}</div>
+                    <div style="color: #FF0000">Location: {{trainingLocations}}</div>
+                    <div style="color: #FF0000">Mode: {{trainingMode}}</div>
+                </div>
+                <br />
+                <div style="color: #FF0000"><strong>Incase of non acceptance within two days of this mail, the same will be auto approved</strong></div>
+            </div>
+            <br />
+            <div style="color: #FF0000">Team HR</div>
+        </div>
+    </div>
+</div>
