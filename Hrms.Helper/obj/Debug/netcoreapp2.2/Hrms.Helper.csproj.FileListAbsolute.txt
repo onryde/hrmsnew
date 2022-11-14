@@ -36,10 +36,10 @@ D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrm
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\bin\Debug\netcoreapp2.2\Hrms.Helper.deps.json
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\bin\Debug\netcoreapp2.2\Hrms.Helper.dll
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\bin\Debug\netcoreapp2.2\Hrms.Helper.pdb
-D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.csproj.AssemblyReference.cache
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.GeneratedMSBuildEditorConfig.editorconfig
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.AssemblyInfoInputs.cache
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.AssemblyInfo.cs
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.csproj.CoreCompileInputs.cache
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.dll
 D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.pdb
+D:\Desktop\Gowtham Desktop\Desktop\KAI PROJECTS\HRM\HRMS Latest\hrms-develop\hrms-api\Hrms.Helper\obj\Debug\netcoreapp2.2\Hrms.Helper.csproj.AssemblyReference.cache

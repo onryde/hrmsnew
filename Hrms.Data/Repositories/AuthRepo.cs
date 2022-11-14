@@ -413,7 +413,8 @@ namespace Hrms.Data.Repositories
             var employee =
                 GetAll()
                 .Include(var => var.EmployeeCompanyEmployee)
-                .FirstOrDefault(var => var.EmailId.Equals(request.EmailId) && var.IsActive);
+                //.FirstOrDefault(var => var.EmailId.Equals(request.EmailId) && var.IsActive);
+                .FirstOrDefault(var => var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode.Equals(request.EmployeeCode) && var.IsActive);
             if (employee == null)
             {
                 return new BaseResponse

@@ -14,6 +14,8 @@ namespace Hrms.Helper.Models.RequestModels
     public class ForgotPasswordRequest : BaseRequest
     {
         public string EmailId { get; set; }
+        
+        public string EmployeeCode { get; set; }
     }
 
     public class OTPPasswordRequest : BaseRequest

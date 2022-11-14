@@ -920,7 +920,12 @@ namespace Hrms.Data.Repositories
                 Organizers = training.TrainingOrganizer.Select(var => var.Employee.Guid).ToList(),
                 Dates = training.TrainingDate.Select(var => var.Date).ToList(),
                 MaxNominees = training.MaxNominees,
-                IsFeedbackClosed = training.IsFeedbackClosed ?? false
+                IsFeedbackClosed = training.IsFeedbackClosed ?? false,
+                HrAccess=1,
+                EmpAccess=1,
+                MgAccess=1
+
+
             };
 
             var allQuestions = dbContext.SettingsTrainingFeedbackQuestion.Where(var => var.IsActive).ToList();
@@ -1008,6 +1013,7 @@ namespace Hrms.Data.Repositories
                 IsAttended = var.HasAttended,
                 NomineeId = var.TrainingNomineeNavigation.Guid,
                 EmployeeName = var.TrainingNomineeNavigation.Employee.Name
+               
             }).ToList();
 
             return response;

@@ -886,21 +886,25 @@ namespace Hrms.Helper.EmailHelper
                 //emailContent.AppendLine("<p>It is now pending with " + managerName + " for processing</p>");
                 emailContent.AppendLine("<p>You will be intimated on the progress of this request.</p>");
 
-                emailMessages.Add(new EmailMessage
+                string[] multiemail = hrEmailId.Split(',');
+                foreach (string hremail in multiemail)
                 {
-                    Subject = emailSubject,
-                    Content = emailContent.ToString(),
-                    To = new List<EmailAddress>
+                    emailMessages.Add(new EmailMessage
+                    {
+                        Subject = emailSubject,
+                        Content = emailContent.ToString(),
+                        To = new List<EmailAddress>
                         {
                             new EmailAddress
                             {
-                                Email = hrEmailId,
+                                Email = hremail,
                                 Name = hrName
                             }
-                        },
-                    Bcc = settings.EmailSettings.BccEmailAddresses
-                        .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
-                });
+                        }
+                        //, Bcc = settings.EmailSettings.BccEmailAddresses
+                        //    .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                    });
+                }
             }
 
             var emailDto = new EmailDto
@@ -967,7 +971,7 @@ namespace Hrms.Helper.EmailHelper
                     emailContent.Clear();
                     emailContent.AppendLine("<p>Dear " + seniorManagerName + ",</p>");
                     emailContent.AppendLine("<p>Resignation of employee " + employeeName + " is accepted by the reporting manager " + managerName + " on " + DateTime.Today.Date + ".</p>");
-                    emailContent.AppendLine("<p>Please review and process the request on or before "+resignedDate.Date.AddDays(7)+"</p>");
+                    emailContent.AppendLine("<p>Please review and process the request on or before " + resignedDate.Date.AddDays(7) + "</p>");
                     emailContent.AppendLine("<p>You will be intimated on the progress of this request.</p>");
 
                     emailMessages.Add(new EmailMessage
@@ -1075,25 +1079,29 @@ namespace Hrms.Helper.EmailHelper
                     emailContent.Clear();
                     emailContent.AppendLine("<p>Dear " + hrName + ",</p>");
                     emailContent.AppendLine("<p>Resignation of employee " + employeeName + " is accepted by the L2 manager " + seniorManagerName + " on " + DateTime.Today.Date + ".</p>");
-                    emailContent.AppendLine("<p>Please review and process the request on or before "+resignedDate.Date.AddDays(7)+"</p>");
+                    emailContent.AppendLine("<p>Please review and process the request on or before " + resignedDate.Date.AddDays(7) + "</p>");
                     emailContent.AppendLine("<p>You will be intimated on the progress of this request.</p>");
 
-                    emailMessages.Add(new EmailMessage
+                    string[] multiemail = hrEmailId.Split(',');
+                    foreach (string hremail in multiemail)
                     {
-                        Subject = emailSubject,
-                        Content = emailContent.ToString(),
-                        To = new List<EmailAddress>
+                        emailMessages.Add(new EmailMessage
+                        {
+                            Subject = emailSubject,
+                            Content = emailContent.ToString(),
+                            To = new List<EmailAddress>
                         {
                             new EmailAddress
                             {
-                                Email = hrEmailId,
+                                Email = hremail,
                                 Name = hrName
                             }
                         }
-                        //,
-                        //Bcc = settings.EmailSettings.BccEmailAddresses
-                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
-                    });
+                            //,
+                            //Bcc = settings.EmailSettings.BccEmailAddresses
+                            //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        });
+                    }
                 }
             }
             else if (status == "HR-Approved")
@@ -1196,7 +1204,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                     //,
                     //Bcc = settings.EmailSettings.BccEmailAddresses
-                      //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                    //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                 });
 
                 //L1 email
@@ -1248,7 +1256,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
 
@@ -1274,7 +1282,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
             }
@@ -1297,7 +1305,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                     //,
                     //Bcc = settings.EmailSettings.BccEmailAddresses
-                      //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                    //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                 });
 
                 //L1 email
@@ -1321,7 +1329,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
                 //L2 email
@@ -1373,7 +1381,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
             }
@@ -1399,7 +1407,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                     //,
                     //Bcc = settings.EmailSettings.BccEmailAddresses
-                      //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                    //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                 });
 
                 //L1 email
@@ -1423,7 +1431,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
 
@@ -1449,7 +1457,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
             }
@@ -1475,7 +1483,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                     //,
                     //Bcc = settings.EmailSettings.BccEmailAddresses
-                      //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                    //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                 });
 
                 //L1 email
@@ -1503,7 +1511,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
 
@@ -1533,7 +1541,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
                 //HR email
@@ -1561,7 +1569,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
             }
@@ -1585,7 +1593,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                     //,
                     //Bcc = settings.EmailSettings.BccEmailAddresses
-                      //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                    //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                 });
 
                 //L1 email
@@ -1686,7 +1694,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                     //,
                     //Bcc = settings.EmailSettings.BccEmailAddresses
-                      //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                    //   .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                 });
 
                 //L1 email
@@ -1710,7 +1718,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
 
@@ -1736,7 +1744,7 @@ namespace Hrms.Helper.EmailHelper
                         }
                         //,
                         //Bcc = settings.EmailSettings.BccEmailAddresses
-                          //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
+                        //  .Select(var => new EmailAddress { Email = var.Email, Name = var.Name }).ToList()
                     });
                 }
             }

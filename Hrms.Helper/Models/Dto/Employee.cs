@@ -209,6 +209,7 @@ namespace Hrms.Helper.Models.Dto
         public string Status { get; set; }
         public string Role { get; set; }
         public DateTime? DateofJoing { get; set; }
+        public DateTime? DateofJoingExp { get; set; }
         public string EducationDetails { get; set; }
         public int TotalyrExp { get; set; }
         public double CTC { get; set; }

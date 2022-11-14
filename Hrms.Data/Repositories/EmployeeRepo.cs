@@ -743,13 +743,13 @@ namespace Hrms.Data.Repositories
         {
             var employees =
                 GetAll()
-                    .Include(var => var.Role)
+                    //.Include(var => var.Role)
                     .Include(var => var.EmployeeCompanyEmployee)
-                    .Include(var => var.EmployeeDataVerificationEmployee)
+                    //.Include(var => var.EmployeeDataVerificationEmployee)
                     .Include(var => var.EmployeeContactEmployee)
                     .Where(var => var.IsActive
                                   && var.EmployeeCompanyEmployee != null
-                                  && var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode != null
+                                  //&& var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode != null
                                   && var.EmployeeCompanyEmployee.FirstOrDefault().Doj.HasValue
                                   && var.EmployeeCompanyEmployee.FirstOrDefault().Doj.Value.Date >= request.FromDate
                                   && var.EmployeeCompanyEmployee.FirstOrDefault().ProbationEndDate.HasValue
@@ -785,7 +785,6 @@ namespace Hrms.Data.Repositories
                                   && (request.Roles == null || !request.Roles.Any() ||
                                       request.Roles.Any(var1 =>
                                           var1 == var.Role.Guid))
-                    //&& (var.EmployeePersonalEmployee.FirstOrDefault().DobActual.Value.Birthdayday(request.FromDate.Date))
                     )
                     .Select(var => new ProbationrptDto
                     {
@@ -999,7 +998,7 @@ namespace Hrms.Data.Repositories
                             ).OrderBy(var => var.Code).ToList();
 
             var maxEdu = (from edu in dbContext.EmployeeEducation
-                          where edu.CourseType == "Regular"
+                          where edu.CourseType == "Regular" && edu.CompletedYear != null
                           group edu by edu.EmployeeId into empedugrp
                           let completedyr = empedugrp.Max(x => x.CompletedYear)
                           select new CTCrptDto
@@ -1009,7 +1008,7 @@ namespace Hrms.Data.Repositories
                               //CompletedYear = completedyr
                           }).ToList();
 
-            var maxCTC = (from ctc in dbContext.EmployeeCompensation
+            var maxCTC = (from ctc in dbContext.EmployeeCompensation 
                           group ctc by ctc.EmployeeId into empctcgrp
                           let ctcyr = empctcgrp.Max(x => x.Year)
                           select new CTCrptDto
@@ -1018,7 +1017,7 @@ namespace Hrms.Data.Repositories
                               CTC = empctcgrp.First(s => s.Year == ctcyr).AnnualCtc
                           }).ToList();
 
-            var minExp = (from exp in dbContext.EmployeePreviousCompany
+            var minExp = (from exp in dbContext.EmployeePreviousCompany 
                           group exp by exp.EmployeeId into empexpgrp
                           let dojval = empexpgrp.Min(x => x.Doj)
                           select new CTCrptDto
@@ -1029,8 +1028,8 @@ namespace Hrms.Data.Repositories
             var combine = (from emp in employees
                            join empedu in maxEdu on emp.EmployeeId equals empedu.EmployeeId
                            join empCtc in maxCTC on emp.EmployeeId equals empCtc.EmployeeId
-                           join empexp in minExp on emp.EmployeeId equals empexp.EmployeeId into expdet
-                           from empexpdet in expdet.DefaultIfEmpty()
+                           join empexp in minExp on emp.EmployeeId equals empexp.EmployeeId 
+                           //into expdet from empexpdet in expdet.DefaultIfEmpty()
                            select new CTCrptDto
                            {
                                EmployeeId = emp.EmployeeId,
@@ -1049,7 +1048,8 @@ namespace Hrms.Data.Repositories
                                DateofJoing = emp.DateofJoing,
                                EducationDetails = empedu.EducationDetails,
                                CTC = empCtc.CTC,
-                               TotalyrExp = empexpdet.DateofJoing != null && empexpdet.DateofJoing != DateTime.MinValue ? (DateTime.Today.Year - empexpdet.DateofJoing.Value.Year) : 0
+                               DateofJoingExp = empexp.DateofJoing
+                               //TotalyrExp = empexpdet.DateofJoing != null && empexpdet.DateofJoing != DateTime.MinValue ? (DateTime.Today.Year - empexpdet.DateofJoing.Value.Year) : 0
                            }).ToList();
 
             var empid = request.UserIdNum;
@@ -1080,72 +1080,101 @@ namespace Hrms.Data.Repositories
 
         public EmployeeRptResignedResponse GetEmployeeRptResigned(EmployeeReportFilterRequest request)
         {
-            var employees =
-                    GetAll()
-                .Include(var => var.Role)
-                .Include(var => var.EmployeeCompanyEmployee)
-                .Include(var => var.EmployeeExitEmployee).ThenInclude(var => var.EmployeeExitHodfeedBackForm)
-                .Where(var => var.IsActive
-                              && var.EmployeeCompanyEmployee != null
-                              && var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode != null
-                              && var.EmployeeExitEmployee.FirstOrDefault().Status == "Completed"
-                              && (string.IsNullOrWhiteSpace(request.Name) || var.Name.Contains(request.Name))
-                              && (string.IsNullOrWhiteSpace(request.Email) || var.EmailId.Contains(request.Email))
-                              && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.HasValue
-                              && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value >= request.FromDate
-                              && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value <= request.ToDate
-                              && (string.IsNullOrWhiteSpace(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
-                                      .EmployeeCode.Contains(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
-                                      .OffRoleCode.Contains(request.Code))
-                                      && (request.Status == null || !request.Status.Any() ||
-                                  request.Status.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault().Status))
-                              && (string.IsNullOrWhiteSpace(request.Phone) || var.EmployeeContactEmployee.Any(var1 =>
-                                      var1.OfficialNumber.Contains(request.Phone)))
-                              && (request.Locations == null || !request.Locations.Any() || (var.EmployeeCompanyEmployee.FirstOrDefault().Location != null &&
-                                  request.Locations.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                                          .Location.Guid))) && (request.Grades == null || !request.Grades.Any() ||
-                                  (var.EmployeeCompanyEmployee.FirstOrDefault().Grade != null &&
-                                  request.Grades.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                                                                 .Grade.Guid)))
-                              && (request.Departments == null || !request.Departments.Any() ||
-                                  (var.EmployeeCompanyEmployee.FirstOrDefault()
-                                      .Department != null &&
-                                  request.Departments.Any(var1 =>
-                                      var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                                          .Department.Guid)))
-                              && (request.Designations == null || !request.Designations.Any() ||
-                                  (var.EmployeeCompanyEmployee.FirstOrDefault()
-                                      .Designation != null &&
-                                  request.Designations.Any(var1 =>
-                                      var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                                          .Designation.Guid)))
-                              && (request.Roles == null || !request.Roles.Any() ||
-                                  request.Roles.Any(var1 =>
-                                      var1 == var.Role.Guid))
-                )
-                .Select(var => new ResignedrptDto
-                {
-                    Name = var.Name,
-                    Code = var.EmployeeCompanyEmployee.FirstOrDefault().Status.Equals("on-roll")
-                        ? var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode
-                        : var.EmployeeCompanyEmployee.FirstOrDefault().OffRoleCode,
-                    Department = var.EmployeeCompanyEmployee.FirstOrDefault().Department.Name,
-                    Grade = var.EmployeeCompanyEmployee.FirstOrDefault().Grade.Grade,
-                    Location = var.EmployeeCompanyEmployee.FirstOrDefault().Location.Name,
-                    Designation = var.EmployeeCompanyEmployee.FirstOrDefault().Designation.Name,
-                    Region = var.EmployeeCompanyEmployee.FirstOrDefault().Region.Name,
-                    Team = var.EmployeeCompanyEmployee.FirstOrDefault().Team.Name,
-                    EmployeeId = var.Guid,
-                    EmailId = var.EmailId,
-                    DateofConfirmation = var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value,
-                    DateofResignation = var.EmployeeExitEmployee.FirstOrDefault().ResignedOn,
-                    Desired = var.EmployeeExitHodfeedBackFormEmployee != null ? var.EmployeeExitHodfeedBackFormEmployee.FirstOrDefault().IsDesiredAttrition.Equals(0) ? "Undesired" : "Desired" : null,
-                    Status = var.EmployeeCompanyEmployee.FirstOrDefault().Status,
-                    ExitStatus = var.EmployeeCompanyEmployee.FirstOrDefault().IsResigned.Equals(0) ? "Live" : "Resigned",
-                    ExitClearanceStatus = var.EmployeeExitEmployee.FirstOrDefault().Status
-                })
-                .OrderBy(var => var.DateofResignation.Value)
-                .ToList();
+            var employees = (from employee in GetAll()
+                             join empCompany in dbContext.EmployeeCompany on employee.Id equals empCompany.EmployeeId
+                             join empExit in dbContext.EmployeeExit on empCompany.EmployeeId equals empExit.EmployeeId
+                             join empExitHODFeedback in dbContext.EmployeeExitHodfeedBackForm on empExit.Id equals empExitHODFeedback.ExitId
+                             where empCompany.EmployeeCode != null
+                             && empExit.Status == "Completed"
+                             && (string.IsNullOrWhiteSpace(request.Name) || empCompany.AddressingName.Contains(request.Name))
+                             && (string.IsNullOrWhiteSpace(request.Email) || empCompany.AddressingName.Contains(request.Email))
+                             && empExit.ActualRelievingDate.HasValue
+                             && empExit.ActualRelievingDate.Value >= request.FromDate
+                             && empExit.ActualRelievingDate.Value <= request.ToDate
+                             select new ResignedrptDto
+                             {
+                                 Name = employee.Name,
+                                 Code = empCompany.Status.Equals("on-roll") ? empCompany.EmployeeCode : empCompany.OffRoleCode,
+                                 Department = empCompany.Department.Name,
+                                 Grade = empCompany.Grade.Grade,
+                                 Location = empCompany.Location.Name,
+                                 Designation = empCompany.Designation.Name,
+                                 Region = empCompany.Region.Name,
+                                 Team = empCompany.Team.Name,
+                                 EmployeeId = employee.Guid,
+                                 EmailId = employee.EmailId,
+                                 DateofConfirmation = empExit.ActualRelievingDate.Value,
+                                 DateofResignation = empExit.ResignedOn,
+                                 Desired = empExitHODFeedback != null ? empExitHODFeedback.IsDesiredAttrition.Equals(0) ? "Undesired" : "Desired" : null,
+                                 Status = empCompany.Status,
+                                 ExitStatus = empCompany.IsResigned.Equals(0) ? "Live" : "Resigned",
+                                 ExitClearanceStatus = empExit.Status
+                             }).ToList();
+
+                             //var employees =
+                             //        GetAll()
+                             //    .Include(var => var.EmployeeCompanyEmployee)
+                             //    .Include(var => var.EmployeeExitEmployee).ThenInclude(var => var.EmployeeExitHodfeedBackForm)
+                             //    .Where(var => var.EmployeeCompanyEmployee != null
+                             //                  && var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode != null
+                             //                  && var.EmployeeExitEmployee.FirstOrDefault().Status == "Completed"
+                             //                  && (string.IsNullOrWhiteSpace(request.Name) || var.Name.Contains(request.Name))
+                             //                  && (string.IsNullOrWhiteSpace(request.Email) || var.EmailId.Contains(request.Email))
+                             //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.HasValue
+                             //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value >= request.FromDate
+                             //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value <= request.ToDate
+                             //                  && (string.IsNullOrWhiteSpace(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                          .EmployeeCode.Contains(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                          .OffRoleCode.Contains(request.Code))
+                             //                          && (request.Status == null || !request.Status.Any() ||
+                             //                      request.Status.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault().Status))
+                             //                  && (string.IsNullOrWhiteSpace(request.Phone) || var.EmployeeContactEmployee.Any(var1 =>
+                             //                          var1.OfficialNumber.Contains(request.Phone)))
+                             //                  && (request.Locations == null || !request.Locations.Any() || (var.EmployeeCompanyEmployee.FirstOrDefault().Location != null &&
+                             //                      request.Locations.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                              .Location.Guid))) && (request.Grades == null || !request.Grades.Any() ||
+                             //                      (var.EmployeeCompanyEmployee.FirstOrDefault().Grade != null &&
+                             //                      request.Grades.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                                                     .Grade.Guid)))
+                             //                  && (request.Departments == null || !request.Departments.Any() ||
+                             //                      (var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                          .Department != null &&
+                             //                      request.Departments.Any(var1 =>
+                             //                          var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                              .Department.Guid)))
+                             //                  && (request.Designations == null || !request.Designations.Any() ||
+                             //                      (var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                          .Designation != null &&
+                             //                      request.Designations.Any(var1 =>
+                             //                          var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+                             //                              .Designation.Guid)))
+                             //                  && (request.Roles == null || !request.Roles.Any() ||
+                             //                      request.Roles.Any(var1 =>
+                             //                          var1 == var.Role.Guid))
+                             //    )
+                             //    .Select(var => new ResignedrptDto
+                             //    {
+                             //        Name = var.Name,
+                             //        Code = var.EmployeeCompanyEmployee.FirstOrDefault().Status.Equals("on-roll")
+                             //            ? var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode
+                             //            : var.EmployeeCompanyEmployee.FirstOrDefault().OffRoleCode,
+                             //        Department = var.EmployeeCompanyEmployee.FirstOrDefault().Department.Name,
+                             //        Grade = var.EmployeeCompanyEmployee.FirstOrDefault().Grade.Grade,
+                             //        Location = var.EmployeeCompanyEmployee.FirstOrDefault().Location.Name,
+                             //        Designation = var.EmployeeCompanyEmployee.FirstOrDefault().Designation.Name,
+                             //        Region = var.EmployeeCompanyEmployee.FirstOrDefault().Region.Name,
+                             //        Team = var.EmployeeCompanyEmployee.FirstOrDefault().Team.Name,
+                             //        EmployeeId = var.Guid,
+                             //        EmailId = var.EmailId,
+                             //        DateofConfirmation = var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value,
+                             //        DateofResignation = var.EmployeeExitEmployee.FirstOrDefault().ResignedOn,
+                             //        Desired = var.EmployeeExitHodfeedBackFormEmployee != null ? var.EmployeeExitHodfeedBackFormEmployee.FirstOrDefault().IsDesiredAttrition.Equals(0) ? "Undesired" : "Desired" : null,
+                             //        Status = var.EmployeeCompanyEmployee.FirstOrDefault().Status,
+                             //        ExitStatus = var.EmployeeCompanyEmployee.FirstOrDefault().IsResigned.Equals(0) ? "Live" : "Resigned",
+                             //        ExitClearanceStatus = var.EmployeeExitEmployee.FirstOrDefault().Status
+                             //    })
+                             //    .OrderBy(var => var.DateofResignation.Value)
+                             //    .ToList();
 
             var empid = request.UserIdNum;
             var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(17) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
@@ -1460,7 +1489,7 @@ namespace Hrms.Data.Repositories
                     EmployeeId = var.Guid,
                     EmailId = var.EmailId,
                     DateofJoing = var.EmployeeCompanyEmployee.FirstOrDefault().Doj.Value,
-                    DateofRelieving = var.EmployeeExitEmployee.FirstOrDefault().ResignedOn,
+                    DateofRelieving = var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value,
                     Desired = var.EmployeeExitHodfeedBackFormEmployee != null ? var.EmployeeExitHodfeedBackFormEmployee.FirstOrDefault().IsDesiredAttrition.Equals(0) ? "Undesired" : "Desired" : null,
                     Status = var.EmployeeCompanyEmployee.FirstOrDefault().Status,
                     Rehired = var.EmployeeCompanyEmployee.FirstOrDefault().IsRehired != null ? var.EmployeeCompanyEmployee.FirstOrDefault().IsRehired.Equals(true) ? "Yes" : "No" : ""
@@ -4687,8 +4716,8 @@ namespace Hrms.Data.Repositories
                         }
                     }
 
-                    var isManager = managerHierarchy.Contains(request.UserIdNum);
-
+                    //var isManager = managerHierarchy.Contains(request.UserIdNum);
+                    var isManager = hasReportees;
                     return new EmployeeExistResponse
                     {
                         IsSuccess = true,
@@ -9827,7 +9856,8 @@ namespace Hrms.Data.Repositories
 
             Save();
 
-            EmailSender.SendExitRequestEmail(employeeName, manager.Name, seniorManager.Name, "HR", employeeEmailId, manager.EmailId, seniorManager.EmailId, "suganthan.l@kubota.com;duraimurugan.n@kubota.com;neelima.c@kubota.com;vijayakumar.g@kubota.com", position, appSettings);
+            EmailSender.SendExitRequestEmail(employeeName, manager.Name, seniorManager.Name, "HR", employeeEmailId, manager.EmailId, seniorManager.EmailId, "suganthan.l@kubota.com,duraimurugan.n@kubota.com,neelima.c@kubota.com,vijayakumar.g@kubota.com", position, appSettings);
+            
 
             return new BaseResponse
             {
@@ -9844,6 +9874,10 @@ namespace Hrms.Data.Repositories
                 .Include(var => var.EmployeeCompanyEmployee).ThenInclude(var => var.ReportingTo)
                 .ThenInclude(var => var.EmployeeCompanyEmployee).ThenInclude(var => var.ReportingTo)
                 .FirstOrDefault(var => var.Guid == request.EmployeeId && var.IsActive);
+            var employeeasset = GetAll()
+                .Include(var => var.EmployeeAssetEmployee)
+                .FirstOrDefault(var => var.Guid == request.EmployeeId);
+
 
             var employeeName = employee.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode + " - " + employee.Name;
             var employeeEmailId = employee.EmailId;
@@ -10306,6 +10340,7 @@ namespace Hrms.Data.Repositories
                 employee.CanLogin = false;
                 employee.EmployeeCompanyEmployee.FirstOrDefault().IsResigned = true;
                 employee.IsActive = false;
+                employeeasset.IsActive = false;
                 status = "Completed";
 
                 dbContext.Notification.Add(new Notification
@@ -10429,7 +10464,7 @@ namespace Hrms.Data.Repositories
             Save();
 
             //Send email to L1,L2 and HR
-            EmailSender.SendExitUpdateEmail(status, employeeName, manager.Name, seniorManager.Name, "HR", employeeEmailId, manager.EmailId, seniorManager.EmailId, "suganthan.l@kubota.com;duraimurugan.n@kubota.com;neelima.c@kubota.com;vijayakumar.g@kubota.com", employeeExit.Feedback, employeeExit.FeedbackForOthers, employeeresignationdate, position, confirmedrelivingdate, appSettings);
+            EmailSender.SendExitUpdateEmail(status, employeeName, manager.Name, seniorManager.Name, "HR", employeeEmailId, manager.EmailId, seniorManager.EmailId, "suganthan.l@kubota.com,duraimurugan.n@kubota.com,neelima.c@kubota.com,vijayakumar.g@kubota.com", employeeExit.Feedback, employeeExit.FeedbackForOthers, employeeresignationdate, position, confirmedrelivingdate, appSettings);
 
 
 
@@ -10726,6 +10761,9 @@ namespace Hrms.Data.Repositories
             return new EmployeeExitResponse
             {
                 IsSuccess = true,
+                EmpAccess = empAccess,
+                HrAccess=hrAccess,
+                MgAccess=mgAccess,
                 EmployeeExits = employeeExits
             };
         }
@@ -11027,7 +11065,7 @@ namespace Hrms.Data.Repositories
                 {
                     var employeeExitWithAsseForOwner = (from exit in dbContext.EmployeeExit
                                                         join employeeAsset in dbContext.EmployeeExitAsset on exit.Id equals employeeAsset.EmployeeExitId
-                                                        where exit.Status == "Exit-Processing" && !exit.IsRevoked && assetTypeIds.Contains(employeeAsset.EmployeeAsset.AssetId)
+                                                        where exit.Status == "Exit-Processing" && !exit.IsRevoked && assetTypeIds.Contains(employeeAsset.AssetTypeId)
                                                         //|| assetTypeIds.Contains(employeeAsset.AssetTypeId) 
                                                         select new EmployeeExitAssetDto
                                                         {
@@ -11066,6 +11104,9 @@ namespace Hrms.Data.Repositories
             return new EmployeeExitAssetResponse
             {
                 IsSuccess = true,
+                MgAccess=1,
+                HrAccess=1,
+                EmpAccess =1,
                 EmployeeExitAssets = employeeExitAssets
             };
         }
