@@ -4716,8 +4716,8 @@ namespace Hrms.Data.Repositories
                         }
                     }
 
-                    //var isManager = managerHierarchy.Contains(request.UserIdNum);
-                    var isManager = hasReportees;
+                    var isManager = managerHierarchy.Contains(request.UserIdNum);
+                    //var isManager = hasReportees;
                     return new EmployeeExistResponse
                     {
                         IsSuccess = true,
