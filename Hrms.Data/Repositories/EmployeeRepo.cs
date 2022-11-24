@@ -1008,7 +1008,7 @@ namespace Hrms.Data.Repositories
                               //CompletedYear = completedyr
                           }).ToList();
 
-            var maxCTC = (from ctc in dbContext.EmployeeCompensation 
+            var maxCTC = (from ctc in dbContext.EmployeeCompensation
                           group ctc by ctc.EmployeeId into empctcgrp
                           let ctcyr = empctcgrp.Max(x => x.Year)
                           select new CTCrptDto
@@ -1017,7 +1017,7 @@ namespace Hrms.Data.Repositories
                               CTC = empctcgrp.First(s => s.Year == ctcyr).AnnualCtc
                           }).ToList();
 
-            var minExp = (from exp in dbContext.EmployeePreviousCompany 
+            var minExp = (from exp in dbContext.EmployeePreviousCompany
                           group exp by exp.EmployeeId into empexpgrp
                           let dojval = empexpgrp.Min(x => x.Doj)
                           select new CTCrptDto
@@ -1028,7 +1028,7 @@ namespace Hrms.Data.Repositories
             var combine = (from emp in employees
                            join empedu in maxEdu on emp.EmployeeId equals empedu.EmployeeId
                            join empCtc in maxCTC on emp.EmployeeId equals empCtc.EmployeeId
-                           join empexp in minExp on emp.EmployeeId equals empexp.EmployeeId 
+                           join empexp in minExp on emp.EmployeeId equals empexp.EmployeeId
                            //into expdet from empexpdet in expdet.DefaultIfEmpty()
                            select new CTCrptDto
                            {
@@ -1078,6 +1078,436 @@ namespace Hrms.Data.Repositories
             };
         }
 
+        public EmployeeRptCompensationResponse GetEmployeeRptCompensation(EmployeeReportFilterRequest request)
+        {
+            var employees = (from employee in GetAll()
+                             join empCompany in dbContext.EmployeeCompany on employee.Id equals empCompany.EmployeeId
+                             join empComp in dbContext.EmployeeCompensation on employee.Id equals empComp.EmployeeId
+                             where employee.IsActive && empCompany != null
+                                                  && empCompany.EmployeeCode != null
+                                                  && (empCompany.IsResigned == null || empCompany.IsResigned == false)
+                                                  && (string.IsNullOrWhiteSpace(request.Name) || empCompany.AddressingName.Contains(request.Name))
+                                                  && (string.IsNullOrWhiteSpace(request.Email) || employee.EmailId.Contains(request.Email))
+                                                  && (string.IsNullOrWhiteSpace(request.Code) ||
+                                                      empCompany.EmployeeCode.Contains(request.Code) ||
+                                                      empCompany.OffRoleCode.Contains(request.Code))
+                                                  && (request.Status == null || !request.Status.Any() ||
+                                                      request.Status.Any(var1 =>
+                                                          var1 == empCompany.Status))
+                                                  && (request.Locations == null || !request.Locations.Any() ||
+                                                      (empCompany.Location != null &&
+                                                      request.Locations.Any(var1 =>
+                                                          var1 == empCompany.Location.Guid)))
+                                                  && (request.Grades == null || !request.Grades.Any() ||
+                                                      (empCompany.Grade != null &&
+                                                      request.Grades.Any(var1 => var1 == empCompany.Grade.Guid)))
+                                                  && (request.Departments == null || !request.Departments.Any() ||
+                                                      (empCompany.Department != null &&
+                                                      request.Departments.Any(var1 =>
+                                                          var1 == empCompany.Department.Guid)))
+                                                  && (request.Designations == null || !request.Designations.Any() ||
+                                                      (empCompany.Designation != null &&
+                                                      request.Designations.Any(var1 =>
+                                                          var1 == empCompany.Designation.Guid)))
+                                                  && (request.Roles == null || !request.Roles.Any() ||
+                                                      request.Roles.Any(var1 =>
+                                                          var1 == employee.Role.Guid))
+                                                          && empComp.Year == request.FromDate.Year
+                             select new CompensationrptDto
+                             {
+                                 EmployeeId = employee.Id.ToString(),
+                                 Code = empCompany.Status.Equals("on-roll")
+                                                       ? empCompany.EmployeeCode
+                                                       : empCompany.OffRoleCode,
+                                 Name = empCompany.AddressingName,
+                                 EmailId = employee.EmailId,
+                                 Department = empCompany.Department.Name,
+                                 Designation = empCompany.Designation.Name,
+                                 Grade = empCompany.Grade.Grade,
+                                 Year = empComp.Year,
+                                 AnnualBasic = empComp.AnnualBasic,
+                                 AnnualHra = empComp.AnnualHra,
+                                 AnnualConvAllow = empComp.AnnualConvAllow,
+                                 AnnualSplAllow = empComp.AnnualSplAllow,
+                                 AnnualMedAllow = empComp.AnnualMedAllow,
+                                 AnnualLta = empComp.AnnualLta,
+                                 AnnualWashing = empComp.AnnualWashing,
+                                 AnnualChildEdu = empComp.AnnualChildEdu,
+                                 AnnualGross = empComp.AnnualGross,
+                                 StatutoryBonus = empComp.StatutoryBonus,
+                                 AnnualVarBonus = empComp.AnnualVarBonus,
+                                 AnnualVarBonusPaid1 = empComp.AnnualVarBonusPaid1,
+                                 AnnualVarBonusPaid2 = empComp.AnnualVarBonusPaid2,
+                                 AnnualAccidIns = empComp.AnnualAccidIns,
+                                 AnnualHealthIns = empComp.AnnualHealthIns,
+                                 AnnualGratuity = empComp.AnnualGratuity,
+                                 AnnualPF = empComp.AnnualPf,
+                                 AnnualEsi = empComp.AnnualEsi,
+                                 AnnualCtc = empComp.AnnualCtc,
+                                 VendorCharges = empComp.VendorCharges,
+                                 OffrollCtc = empComp.OffrollCtc,
+                                 OtherBenefits = empComp.OtherBenefits
+                             }
+                            ).OrderBy(var => var.Code).ToList();
+            var empid = request.UserIdNum;
+            var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(14) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
+            var hrAccess = hrcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(2) && a.ModuleID.Equals(14) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid)).FirstOrDefault().CanAccess : 0;
+
+            _eventLogRepo.AddAuditLog(new AuditInfo
+            {
+                AuditText = string.Format(EventLogActions.GetAllEmployees.Template, request.UserName, request.UserId),
+                PerformedBy = request.UserIdNum,
+                ActionId = EventLogActions.GetAllEmployees.ActionId,
+                Data = JsonConvert.SerializeObject(new
+                {
+                    userId = request.UserId,
+                    userName = request.UserName
+                })
+            });
+
+            Save();
+
+            return new EmployeeRptCompensationResponse
+            {
+                IsSuccess = true,
+                HrAccess = hrAccess,
+                EmployeeCompensationDetails = employees
+            };
+
+        }
+
+        public EmployeeRptMasterResponse GetEmployeeRptMaster(EmployeeReportFilterRequest request)
+        {
+            var employees = (from employee in GetAll()
+                             join empCompany in dbContext.EmployeeCompany on employee.Id equals empCompany.EmployeeId
+                             join empContact in dbContext.EmployeeContact on employee.Id equals empContact.EmployeeId
+                             join empPersonal in dbContext.EmployeePersonal on employee.Id equals empPersonal.EmployeeId
+                             join empStat in dbContext.EmployeeStatutory on employee.Id equals empStat.EmployeeId
+                             //join empBank in dbContext.EmployeeBank on employee.Id equals empBank.EmployeeId
+                             //join emFather in dbContext.EmployeeFamily on employee.Id equals emFather.EmployeeId  into empFath
+                             //from empFather in empFath.DefaultIfEmpty()
+                             //join emMother in dbContext.EmployeeFamily on employee.Id equals emMother.EmployeeId into empMoth
+                             //from empMother in empMoth.DefaultIfEmpty()
+                             //join emWife in dbContext.EmployeeFamily on employee.Id equals emWife.EmployeeId into empSpouse
+                             //from empWife in empSpouse.DefaultIfEmpty()
+                             join empReport in dbContext.EmployeeCompany on empCompany.ReportingToId equals empReport.EmployeeId into rptdet
+                             from empRpt in rptdet.DefaultIfEmpty()
+                             where employee.IsActive && empCompany != null
+                                                  //             && empFather.Relationship == "Father"
+                                                  //           && empMother.Relationship == "Mother"
+                                                  //         && empWife.Relationship == "Wife"
+                                                  && empCompany.EmployeeCode != null
+                                                  && (string.IsNullOrWhiteSpace(request.Name) || empCompany.AddressingName.Contains(request.Name))
+                                                  && (string.IsNullOrWhiteSpace(request.Email) || employee.EmailId.Contains(request.Email))
+                                                  && (string.IsNullOrWhiteSpace(request.Code) ||
+                                                      empCompany.EmployeeCode.Contains(request.Code) ||
+                                                      empCompany.OffRoleCode.Contains(request.Code))
+                                                  && (request.Status == null || !request.Status.Any() ||
+                                                      request.Status.Any(var1 =>
+                                                          var1 == empCompany.Status))
+                                                  && (request.Locations == null || !request.Locations.Any() ||
+                                                      (empCompany.Location != null &&
+                                                      request.Locations.Any(var1 =>
+                                                          var1 == empCompany.Location.Guid)))
+                                                  && (request.Grades == null || !request.Grades.Any() ||
+                                                      (empCompany.Grade != null &&
+                                                      request.Grades.Any(var1 => var1 == empCompany.Grade.Guid)))
+                                                  && (request.Departments == null || !request.Departments.Any() ||
+                                                      (empCompany.Department != null &&
+                                                      request.Departments.Any(var1 =>
+                                                          var1 == empCompany.Department.Guid)))
+                                                  && (request.Designations == null || !request.Designations.Any() ||
+                                                      (empCompany.Designation != null &&
+                                                      request.Designations.Any(var1 =>
+                                                          var1 == empCompany.Designation.Guid)))
+                                                  && (request.Roles == null || !request.Roles.Any() ||
+                                                      request.Roles.Any(var1 =>
+                                                          var1 == employee.Role.Guid))
+                             select new EmpMasterrptDto
+                             {
+                                 EmployeeId = employee.Id.ToString(),
+                                 Status = employee.IsActive.Equals(true) ? "Active" : "Inactive",
+                                 Role = empCompany.Status,
+                                 Code = empCompany.Status.Equals("on-roll")
+                                                       ? empCompany.EmployeeCode
+                                                       : empCompany.OffRoleCode,
+                                 Vendor = empCompany.VendorName,
+                                 Name = empCompany.AddressingName,
+                                 Division = empCompany.Division,
+                                 Department = empCompany.Department.Description,
+                                 Team = empCompany.Team.Description,
+                                 Location = empCompany.Location.Description,
+                                 Bifurcation = empCompany.LocationBifurcation,
+                                 Category = empCompany.Category.Description,
+                                 Designation = empCompany.Designation.Description,
+                                 ChProducts = empCompany.ProductLine.ProductLine,
+                                 Grade = empCompany.Grade.Grade,
+                                 KAIDOJ = empCompany.Doj,
+                                 DOBRecd = empPersonal.DobRecord,
+                                 DOBActual = empPersonal.DobActual,
+                                 Gender = empPersonal.Gender,
+                                 //Age = DateTime.Today.Year - empPersonal.DobRecord.Value.Year,
+                                 //ProbationPeriod = empCompany.Doj.Value.AddDays(184),
+                                 ConfirmedDate = empCompany.ConfirmedOn,
+                                 PresentedAddress = empContact.PresentAddress.DoorNo + ", " + empContact.PresentAddress.StreetName + ", " + empContact.PresentAddress.City + ", " + empContact.PresentAddress.District + ", " + empContact.PresentAddress.State + "- " + empContact.PresentAddress.Pincode,
+                                 PermaneedAddress = empContact.PermanentAddress.DoorNo + ", " + empContact.PermanentAddress.StreetName + ", " + empContact.PermanentAddress.City + ", " + empContact.PermanentAddress.District + ", " + empContact.PermanentAddress.State + "- " + empContact.PermanentAddress.Pincode,
+                                 RMCode = empCompany.ReportingToId != null ? empCompany.ReportingTo.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode : null,
+                                 SMCode = empRpt.ReportingToId != null ? empRpt.ReportingTo.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode : null,
+                                 BloodGroup = empPersonal.BloodGroup,
+                                 PANNo = empStat.PanNumber,
+                                 MaritialStatus = empPersonal.MaritalStatus,
+                                 MarriageDate = empPersonal.MarriageDate.Value,
+                                 ContactNo = empContact.ContactNumber,
+                                 OfficalContactNo = empContact.OfficialNumber,
+                                 OfficialMailId = empContact.OfficialEmailId,
+                                 PersonalMailId = empContact.PersonalEmailId,
+                                 //FatherName = empFather.Name,
+                                 //MotherName = empMother.Name,
+                                 //SpouseName = empWife.Name,
+                                 // KAIExp = DateTime.Today.Year - empCompany.Doj.Value.Year,
+                                 //ResignationDate = empExit.ResignedOn,
+                                 //RelievingDate = empExit.ActualRelievingDate.Value,
+                                 PFNo = empStat.PfNumber,
+                                 UANNo = empStat.UanNumber,
+                                 AadharName = empStat.AadharName,
+                                 AadharNo = empStat.AadharNumber,
+                                 //ResignationType = empExit.ResignationReason
+
+                             }
+                            ).OrderBy(var => var.EmployeeId).ToList();
+            var minExp = (from exp in dbContext.EmployeePreviousCompany
+                          where exp.Doj != null
+                          group exp by exp.EmployeeId into empexpgrp
+                          let dojval = empexpgrp.Min(x => x.Doj)
+                          select new EmpMasterrptDto
+                          {
+                              EmployeeId = empexpgrp.Key.ToString(),
+                              MinDoj = empexpgrp.First(s => s.Doj == dojval).Doj.Value
+                          }).ToList();
+            var maxExp = (from expmax in dbContext.EmployeePreviousCompany
+                          where expmax.Doj != null
+                          group expmax by expmax.EmployeeId into empexpmaxgrp
+                          let doevalmax = empexpmaxgrp.Max(x => x.Doe)
+                          select new EmpMasterrptDto
+                          {
+                              EmployeeId = empexpmaxgrp.Key.ToString(),
+                              MaxDoe = empexpmaxgrp.First(s => s.Doe == doevalmax).Doe.Value,
+                              PrevCompany = empexpmaxgrp.First(s => s.Doe == doevalmax).Employer.ToString(),
+                              PrevCompDesg = empexpmaxgrp.First(s => s.Doe == doevalmax).Designation.ToString()
+                          }).ToList();
+            var maxEmergency = (from emergency in dbContext.EmployeeFamily
+                                where emergency.IsActive == true && emergency.IsEmergencyContact == true
+                                group emergency by emergency.EmployeeId into empemerg
+                                let maxemgval = empemerg.Max(x => x.Id)
+                                select new EmpMasterrptDto
+                                {
+                                    EmployeeId = empemerg.Key.ToString(),
+                                    EmergalContactNumber = empemerg.First(s => s.Id == maxemgval).Phone,
+
+                                }).ToList();
+            var maxBank = (from emBank in dbContext.EmployeeBank
+                           where emBank.IsActive == true
+                           group emBank by emBank.EmployeeId into empBank
+                           let maxBnk = empBank.Max(x => x.Id)
+                           select new EmpMasterrptDto
+                           {
+                               EmployeeId = empBank.Key.ToString(),
+                               BankAccno = empBank.FirstOrDefault().BankAccountNumber,
+                               BankName = empBank.FirstOrDefault().BankName,
+                               IFSC = empBank.FirstOrDefault().IfscCode
+                           }).ToList();
+            var maxExit = (from emexit in dbContext.EmployeeExit
+                           where emexit.Status == "Completed"
+                           group emexit by emexit.EmployeeId into empexit
+                           let maxext = empexit.Max(x => x.Id)
+                           select new EmpMasterrptDto
+                           {
+                               EmployeeId = empexit.Key.ToString(),
+                               ResignationDate = empexit.FirstOrDefault().ResignedOn,
+                               RelievingDate = empexit.FirstOrDefault().ActualRelievingDate,
+                               ResignationType = empexit.FirstOrDefault().ResignationReason
+                           }).ToList();
+            var empFather = (from emFather in dbContext.EmployeeFamily
+                             where emFather.Relationship == "Father" && emFather.IsActive == true
+                             group emFather by emFather.EmployeeId into empFath
+                             let empfa = empFath.Max(x => x.Id)
+                             select new EmpMasterrptDto
+                             {
+                                 EmployeeId = empFath.Key.ToString(),
+                                 FatherName = empFath.FirstOrDefault().Name
+                             }).ToList();
+            var empMother = (from emMother in dbContext.EmployeeFamily
+                             where emMother.Relationship == "Mother" && emMother.IsActive == true
+                             group emMother by emMother.EmployeeId into empMoth
+                             let empAm = empMoth.Max(x => x.Id)
+                             select new EmpMasterrptDto
+                             {
+                                 EmployeeId = empMoth.Key.ToString(),
+                                 MotherName = empMoth.FirstOrDefault().Name
+                             }).ToList();
+            var empWife = (from emWife in dbContext.EmployeeFamily
+                           where emWife.Relationship == "Wife" && emWife.IsActive == true
+                           group emWife by emWife.EmployeeId into empSpou
+                           let empwi = empSpou.Max(x => x.Id)
+                           select new EmpMasterrptDto
+                           {
+                               EmployeeId = empSpou.Key.ToString(),
+                               WifeName = empSpou.FirstOrDefault().Name
+                           }).ToList();
+            var empHusband = (from emHusband in dbContext.EmployeeFamily
+                              where emHusband.Relationship == "Husband" && emHusband.IsActive == true
+                              group emHusband by emHusband.EmployeeId into empHus
+                              let emphu = empHus.Max(x => x.Id)
+                              select new EmpMasterrptDto
+                              {
+                                  EmployeeId = empHus.Key.ToString(),
+                                  HusbandName = empHus.FirstOrDefault().Name
+                              }).ToList();
+
+            var empChildcnt = (from emChild in dbContext.EmployeeFamily
+                               where emChild.Relationship == "Son" || emChild.Relationship == "Daughter"
+                               group emChild by emChild.EmployeeId into empChi
+                               select new EmpMasterrptDto
+                               {
+                                   //EmployeeId = empChi.Key.ToString(),
+                                   EmpId = empChi.Key,
+                                   ChildrenCnt = empChi.Count()
+                               }).ToList();
+            var empRegCourse = (from emReg in dbContext.EmployeeEducation
+                                where emReg.CourseType == "Regular"
+                                group emReg by emReg.EmployeeId into empReg
+                                select new EmpMasterrptDto
+                                {
+                                    //EmployeeId = empChi.Key.ToString(),
+                                    EmpId = empReg.Key,
+                                    RegCourseCnt = empReg.Count()
+                                }).ToList();
+            var empPartCourse = (from emPart in dbContext.EmployeeEducation
+                                 where emPart.CourseType == "Correspondance" || emPart.CourseType == "Part Time"
+                                 group emPart by emPart.EmployeeId into empPart
+                                 select new EmpMasterrptDto
+                                 {
+                                     //EmployeeId = empChi.Key.ToString(),
+                                     EmpId = empPart.Key,
+                                     PartCourseCnt = empPart.Count()
+                                 }).ToList();
+
+
+            var combine = (from emp in employees
+                           join empminexpr in minExp on emp.EmployeeId equals empminexpr.EmployeeId into minex
+                           from empminexp in minex.DefaultIfEmpty()
+                           join empmaxexpr in maxExp on emp.EmployeeId equals empmaxexpr.EmployeeId into maxex
+                           from empmaxexp in maxex.DefaultIfEmpty()
+                           join empemerg in maxEmergency on emp.EmployeeId equals empemerg.EmployeeId into emg
+                           from empemg in emg.DefaultIfEmpty()
+                           join empmaxbank in maxBank on emp.EmployeeId equals empmaxbank.EmployeeId into maxbnk
+                           from empbank in maxbnk.DefaultIfEmpty()
+                           join emexit in maxExit on emp.EmployeeId equals emexit.EmployeeId into maxext
+                           from empexit in maxext.DefaultIfEmpty()
+                           join empfat in empFather on emp.EmployeeId equals empfat.EmployeeId into empfa
+                           from empAppa in empfa.DefaultIfEmpty()
+                           join empmot in empMother on emp.EmployeeId equals empmot.EmployeeId into empMo
+                           from empAmma in empMo.DefaultIfEmpty()
+                           join empspo in empWife on emp.EmployeeId equals empspo.EmployeeId into empsp
+                           from empSpouse in empsp.DefaultIfEmpty()
+                           join empchild in empChildcnt on emp.EmployeeId equals empchild.EmpId.ToString() into empch
+                           from empChildcn in empch.DefaultIfEmpty()
+                           join emreg in empRegCourse on emp.EmployeeId equals emreg.EmpId.ToString() into empreg
+                           from empRegular in empreg.DefaultIfEmpty()
+                           join empart in empPartCourse on emp.EmployeeId equals empart.EmpId.ToString() into emppart
+                           from empParttime in emppart.DefaultIfEmpty()
+                           select new EmpMasterrptDto
+                           {
+                               EmployeeId = emp.EmployeeId,
+                               EmergalContactNumber = empemg?.EmergalContactNumber ?? " ",
+                               MinDoj = empminexp?.MinDoj ?? DateTime.Today,
+                               MaxDoe = empmaxexp?.MaxDoe ?? DateTime.Today,
+                               PrevCompany = empmaxexp?.PrevCompany ?? "",
+                               PrevCompDesg = empmaxexp?.PrevCompDesg ?? "",
+                               BankName = empbank?.BankName ?? "",
+                               BankAccno = empbank?.BankAccno ?? "",
+                               IFSC = empbank?.IFSC ?? "",
+                               FatherName = empAppa?.FatherName ?? "",
+                               MotherName = empAmma?.MotherName ?? "",
+                               WifeName = empSpouse?.WifeName ?? "",
+                               HusbandName = empSpouse?.HusbandName ?? "",
+                               EmpId = empChildcn?.EmpId ?? 0,
+                               ChildrenCnt = empChildcn?.ChildrenCnt ?? 0,
+                               RegCourseCnt = empRegular?.RegCourseCnt ?? 0,
+                               PartCourseCnt = empParttime?.PartCourseCnt ?? 0,
+                               ResignationDate = empexit?.ResignationDate ?? DateTime.Today,
+                               RelievingDate = empexit?.RelievingDate ?? DateTime.Today,
+                               ResignationType = empexit?.ResignationType ?? "",
+                               Status = emp.Status,
+                               Role = emp.Role,
+                               Code = emp.Code,
+                               Vendor = emp.Vendor,
+                               Name = emp.Name,
+                               Division = emp.Division,
+                               Department = emp.Department,
+                               Team = emp.Team,
+                               Location = emp.Location,
+                               Bifurcation = emp.Bifurcation,
+                               Category = emp.Category,
+                               Designation = emp.Designation,
+                               ChProducts = emp.ChProducts,
+                               Grade = emp.Grade,
+                               KAIDOJ = emp.KAIDOJ,
+                               DOBRecd = emp.DOBRecd,
+                               DOBActual = emp.DOBActual,
+                               Gender = emp.Gender,
+                               //Age = emp.Age,
+                               //ProbationPeriod = emp.ProbationPeriod,
+                               ConfirmedDate = emp.ConfirmedDate,
+                               PresentedAddress = emp.PresentedAddress,
+                               PermaneedAddress = emp.PermaneedAddress,
+                               RMCode = emp.RMCode,
+                               SMCode = emp.SMCode,
+                               BloodGroup = emp.BloodGroup,
+                               PANNo = emp.PANNo,
+                               MaritialStatus = emp.MaritialStatus,
+                               MarriageDate = emp.MarriageDate,
+                               ContactNo = emp.ContactNo,
+                               OfficalContactNo = emp.OfficalContactNo,
+                               OfficialMailId = emp.OfficialMailId,
+                               PersonalMailId = emp.PersonalMailId,
+                               //FatherName = emp.FatherName,
+                               //MotherName = emp.MotherName,
+                               //SpouseName = emp.SpouseName,
+                               //KAIExp = emp.KAIExp,
+                               //ResignationDate = empExit.ResignedOn,
+                               //RelievingDate = empExit.ActualRelievingDate.Value,
+                               PFNo = emp.PFNo,
+                               UANNo = emp.UANNo,
+                               AadharName = emp.AadharName,
+                               AadharNo = emp.AadharNo,
+                           }).ToList();
+
+            var empid = request.UserIdNum;
+            var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(17) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
+            var hrAccess = hrcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(2) && a.ModuleID.Equals(17) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid)).FirstOrDefault().CanAccess : 0;
+
+            _eventLogRepo.AddAuditLog(new AuditInfo
+            {
+                AuditText = string.Format(EventLogActions.GetAllEmployees.Template, request.UserName, request.UserId),
+                PerformedBy = request.UserIdNum,
+                ActionId = EventLogActions.GetAllEmployees.ActionId,
+                Data = JsonConvert.SerializeObject(new
+                {
+                    userId = request.UserId,
+                    userName = request.UserName
+                })
+            });
+
+            Save();
+
+            return new EmployeeRptMasterResponse
+            {
+                IsSuccess = true,
+                HrAccess = hrAccess,
+                EmployeeRptMasterDetails = combine
+            };
+        }
         public EmployeeRptResignedResponse GetEmployeeRptResigned(EmployeeReportFilterRequest request)
         {
             var employees = (from employee in GetAll()
@@ -1111,70 +1541,70 @@ namespace Hrms.Data.Repositories
                                  ExitClearanceStatus = empExit.Status
                              }).ToList();
 
-                             //var employees =
-                             //        GetAll()
-                             //    .Include(var => var.EmployeeCompanyEmployee)
-                             //    .Include(var => var.EmployeeExitEmployee).ThenInclude(var => var.EmployeeExitHodfeedBackForm)
-                             //    .Where(var => var.EmployeeCompanyEmployee != null
-                             //                  && var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode != null
-                             //                  && var.EmployeeExitEmployee.FirstOrDefault().Status == "Completed"
-                             //                  && (string.IsNullOrWhiteSpace(request.Name) || var.Name.Contains(request.Name))
-                             //                  && (string.IsNullOrWhiteSpace(request.Email) || var.EmailId.Contains(request.Email))
-                             //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.HasValue
-                             //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value >= request.FromDate
-                             //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value <= request.ToDate
-                             //                  && (string.IsNullOrWhiteSpace(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                          .EmployeeCode.Contains(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                          .OffRoleCode.Contains(request.Code))
-                             //                          && (request.Status == null || !request.Status.Any() ||
-                             //                      request.Status.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault().Status))
-                             //                  && (string.IsNullOrWhiteSpace(request.Phone) || var.EmployeeContactEmployee.Any(var1 =>
-                             //                          var1.OfficialNumber.Contains(request.Phone)))
-                             //                  && (request.Locations == null || !request.Locations.Any() || (var.EmployeeCompanyEmployee.FirstOrDefault().Location != null &&
-                             //                      request.Locations.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                              .Location.Guid))) && (request.Grades == null || !request.Grades.Any() ||
-                             //                      (var.EmployeeCompanyEmployee.FirstOrDefault().Grade != null &&
-                             //                      request.Grades.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                                                     .Grade.Guid)))
-                             //                  && (request.Departments == null || !request.Departments.Any() ||
-                             //                      (var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                          .Department != null &&
-                             //                      request.Departments.Any(var1 =>
-                             //                          var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                              .Department.Guid)))
-                             //                  && (request.Designations == null || !request.Designations.Any() ||
-                             //                      (var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                          .Designation != null &&
-                             //                      request.Designations.Any(var1 =>
-                             //                          var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
-                             //                              .Designation.Guid)))
-                             //                  && (request.Roles == null || !request.Roles.Any() ||
-                             //                      request.Roles.Any(var1 =>
-                             //                          var1 == var.Role.Guid))
-                             //    )
-                             //    .Select(var => new ResignedrptDto
-                             //    {
-                             //        Name = var.Name,
-                             //        Code = var.EmployeeCompanyEmployee.FirstOrDefault().Status.Equals("on-roll")
-                             //            ? var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode
-                             //            : var.EmployeeCompanyEmployee.FirstOrDefault().OffRoleCode,
-                             //        Department = var.EmployeeCompanyEmployee.FirstOrDefault().Department.Name,
-                             //        Grade = var.EmployeeCompanyEmployee.FirstOrDefault().Grade.Grade,
-                             //        Location = var.EmployeeCompanyEmployee.FirstOrDefault().Location.Name,
-                             //        Designation = var.EmployeeCompanyEmployee.FirstOrDefault().Designation.Name,
-                             //        Region = var.EmployeeCompanyEmployee.FirstOrDefault().Region.Name,
-                             //        Team = var.EmployeeCompanyEmployee.FirstOrDefault().Team.Name,
-                             //        EmployeeId = var.Guid,
-                             //        EmailId = var.EmailId,
-                             //        DateofConfirmation = var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value,
-                             //        DateofResignation = var.EmployeeExitEmployee.FirstOrDefault().ResignedOn,
-                             //        Desired = var.EmployeeExitHodfeedBackFormEmployee != null ? var.EmployeeExitHodfeedBackFormEmployee.FirstOrDefault().IsDesiredAttrition.Equals(0) ? "Undesired" : "Desired" : null,
-                             //        Status = var.EmployeeCompanyEmployee.FirstOrDefault().Status,
-                             //        ExitStatus = var.EmployeeCompanyEmployee.FirstOrDefault().IsResigned.Equals(0) ? "Live" : "Resigned",
-                             //        ExitClearanceStatus = var.EmployeeExitEmployee.FirstOrDefault().Status
-                             //    })
-                             //    .OrderBy(var => var.DateofResignation.Value)
-                             //    .ToList();
+            //var employees =
+            //        GetAll()
+            //    .Include(var => var.EmployeeCompanyEmployee)
+            //    .Include(var => var.EmployeeExitEmployee).ThenInclude(var => var.EmployeeExitHodfeedBackForm)
+            //    .Where(var => var.EmployeeCompanyEmployee != null
+            //                  && var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode != null
+            //                  && var.EmployeeExitEmployee.FirstOrDefault().Status == "Completed"
+            //                  && (string.IsNullOrWhiteSpace(request.Name) || var.Name.Contains(request.Name))
+            //                  && (string.IsNullOrWhiteSpace(request.Email) || var.EmailId.Contains(request.Email))
+            //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.HasValue
+            //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value >= request.FromDate
+            //                  && var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value <= request.ToDate
+            //                  && (string.IsNullOrWhiteSpace(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                          .EmployeeCode.Contains(request.Code) || var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                          .OffRoleCode.Contains(request.Code))
+            //                          && (request.Status == null || !request.Status.Any() ||
+            //                      request.Status.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault().Status))
+            //                  && (string.IsNullOrWhiteSpace(request.Phone) || var.EmployeeContactEmployee.Any(var1 =>
+            //                          var1.OfficialNumber.Contains(request.Phone)))
+            //                  && (request.Locations == null || !request.Locations.Any() || (var.EmployeeCompanyEmployee.FirstOrDefault().Location != null &&
+            //                      request.Locations.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                              .Location.Guid))) && (request.Grades == null || !request.Grades.Any() ||
+            //                      (var.EmployeeCompanyEmployee.FirstOrDefault().Grade != null &&
+            //                      request.Grades.Any(var1 => var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                                                     .Grade.Guid)))
+            //                  && (request.Departments == null || !request.Departments.Any() ||
+            //                      (var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                          .Department != null &&
+            //                      request.Departments.Any(var1 =>
+            //                          var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                              .Department.Guid)))
+            //                  && (request.Designations == null || !request.Designations.Any() ||
+            //                      (var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                          .Designation != null &&
+            //                      request.Designations.Any(var1 =>
+            //                          var1 == var.EmployeeCompanyEmployee.FirstOrDefault()
+            //                              .Designation.Guid)))
+            //                  && (request.Roles == null || !request.Roles.Any() ||
+            //                      request.Roles.Any(var1 =>
+            //                          var1 == var.Role.Guid))
+            //    )
+            //    .Select(var => new ResignedrptDto
+            //    {
+            //        Name = var.Name,
+            //        Code = var.EmployeeCompanyEmployee.FirstOrDefault().Status.Equals("on-roll")
+            //            ? var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode
+            //            : var.EmployeeCompanyEmployee.FirstOrDefault().OffRoleCode,
+            //        Department = var.EmployeeCompanyEmployee.FirstOrDefault().Department.Name,
+            //        Grade = var.EmployeeCompanyEmployee.FirstOrDefault().Grade.Grade,
+            //        Location = var.EmployeeCompanyEmployee.FirstOrDefault().Location.Name,
+            //        Designation = var.EmployeeCompanyEmployee.FirstOrDefault().Designation.Name,
+            //        Region = var.EmployeeCompanyEmployee.FirstOrDefault().Region.Name,
+            //        Team = var.EmployeeCompanyEmployee.FirstOrDefault().Team.Name,
+            //        EmployeeId = var.Guid,
+            //        EmailId = var.EmailId,
+            //        DateofConfirmation = var.EmployeeExitEmployee.FirstOrDefault().ActualRelievingDate.Value,
+            //        DateofResignation = var.EmployeeExitEmployee.FirstOrDefault().ResignedOn,
+            //        Desired = var.EmployeeExitHodfeedBackFormEmployee != null ? var.EmployeeExitHodfeedBackFormEmployee.FirstOrDefault().IsDesiredAttrition.Equals(0) ? "Undesired" : "Desired" : null,
+            //        Status = var.EmployeeCompanyEmployee.FirstOrDefault().Status,
+            //        ExitStatus = var.EmployeeCompanyEmployee.FirstOrDefault().IsResigned.Equals(0) ? "Live" : "Resigned",
+            //        ExitClearanceStatus = var.EmployeeExitEmployee.FirstOrDefault().Status
+            //    })
+            //    .OrderBy(var => var.DateofResignation.Value)
+            //    .ToList();
 
             var empid = request.UserIdNum;
             var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(17) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
@@ -5822,9 +6252,14 @@ namespace Hrms.Data.Repositories
                     })
                     .ToList();
 
+                var empid = request.UserIdNum;
+                var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(12) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
+                var hrAccess = hrcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(2) && a.ModuleID.Equals(12) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid)).FirstOrDefault().CanAccess : 0;
+
                 return new GetEmployeeAppraisalResponse
                 {
                     IsSuccess = true,
+                    HrAccess = hrAccess,
                     Appraisals = appraisals,
                     IsAllowed = true,
                     AppraisalObjectiveDocuments = objectiveDocuments
@@ -9623,7 +10058,7 @@ namespace Hrms.Data.Repositories
                 HrapprovalFeedbackForOthers = request.ResignationType,
                 UpdatedOnHR = DateTime.Now,
                 ActualRelievingDate = request.PreferredRelievingDate,
-                EmployeeId  = employee.Id
+                EmployeeId = employee.Id
                 //confirmedrelivingdate = request.PreferredRelievingDate.ToString(),
 
 
@@ -9857,7 +10292,7 @@ namespace Hrms.Data.Repositories
             Save();
 
             EmailSender.SendExitRequestEmail(employeeName, manager.Name, seniorManager.Name, "HR", employeeEmailId, manager.EmailId, seniorManager.EmailId, "suganthan.l@kubota.com,duraimurugan.n@kubota.com,neelima.c@kubota.com,vijayakumar.g@kubota.com", position, appSettings);
-            
+
 
             return new BaseResponse
             {
@@ -10624,6 +11059,7 @@ namespace Hrms.Data.Repositories
             var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(17) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
             var hrAccess = hrcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(2) && a.ModuleID.Equals(17) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid)).FirstOrDefault().CanAccess : 0;
 
+
             var mgcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(3) && a.ModuleID.Equals(17) && a.Ismanager.Equals(1));
             var mgAccess = mgcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(3) && a.ModuleID.Equals(17) && a.Ismanager.Equals(1)).FirstOrDefault().CanAccess : 0;
 
@@ -10762,8 +11198,8 @@ namespace Hrms.Data.Repositories
             {
                 IsSuccess = true,
                 EmpAccess = empAccess,
-                HrAccess=hrAccess,
-                MgAccess=mgAccess,
+                HrAccess = hrAccess,
+                MgAccess = mgAccess,
                 EmployeeExits = employeeExits
             };
         }
@@ -11104,9 +11540,9 @@ namespace Hrms.Data.Repositories
             return new EmployeeExitAssetResponse
             {
                 IsSuccess = true,
-                MgAccess=1,
-                HrAccess=1,
-                EmpAccess =1,
+                MgAccess = 1,
+                HrAccess = 1,
+                EmpAccess = 1,
                 EmployeeExitAssets = employeeExitAssets
             };
         }

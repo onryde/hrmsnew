@@ -174,7 +174,8 @@ namespace Hrms.Helper.Models.Dto
         public DateTime? RMSubmitted { get; set; }
         public DateTime? HODSubmitted { get; set; }
     }
-    public class EmployeeRehireDto {
+    public class EmployeeRehireDto
+    {
         public string EmployeeId { get; set; }
         public string Code { get; set; }
         public string Name { get; set; }
@@ -190,7 +191,7 @@ namespace Hrms.Helper.Models.Dto
         public DateTime? DateofJoing { get; set; }
         public DateTime? DateofRelieving { get; set; }
         public string Desired { get; set; }
-        public  string Rehired { get; set; }
+        public string Rehired { get; set; }
 
     }
     public class CTCrptDto
@@ -215,6 +216,105 @@ namespace Hrms.Helper.Models.Dto
         public double CTC { get; set; }
     }
 
+    public class CompensationrptDto
+    {
+        public string EmployeeId { get; set; }
+        public string Code { get; set; }
+        public string Name { get; set; }
+        public string EmailId { get; set; }
+        public string Department { get; set; }
+        public string Designation { get; set; }
+        public string Grade { get; set; }
+        public string Role { get; set; }
+        public int Year { get; set; }
+        public double AnnualBasic { get; set; }
+        public double AnnualHra { get; set; }
+        public double AnnualConvAllow { get; set; }
+        public double AnnualSplAllow { get; set; }
+        public double AnnualMedAllow { get; set; }
+        public double AnnualLta { get; set; }
+        public double AnnualWashing { get; set; }
+        public double AnnualChildEdu { get; set; }
+        public double AnnualGross { get; set; }
+        public double StatutoryBonus { get; set; }
+        public double AnnualVarBonus { get; set; }
+        public double AnnualVarBonusPaid1 { get; set; }
+        public double AnnualVarBonusPaid2 { get; set; }
+        public double AnnualAccidIns { get; set; }
+        public double AnnualHealthIns { get; set; }
+        public double AnnualGratuity { get; set; }
+        public double AnnualPF { get; set; }
+        public double AnnualEsi { get; set; }
+        public double AnnualCtc { get; set; }
+        public double VendorCharges { get; set; }
+        public double OffrollCtc { get; set; }
+        public double OtherBenefits { get; set; }
+
+    }
+    public class EmpMasterrptDto
+    {
+        public string EmployeeId { get; set; }
+        public long? EmpId { get; set; }
+        public int SlNo { get; set; }
+        public string Status { get; set; }
+        public string Role { get; set; }
+        public string Code { get; set; }
+        public string Vendor { get; set; }
+        public string Name { get; set; }
+        public string Division { get; set; }
+        public string Department { get; set; }
+        public string Team { get; set; }
+        public string Location { get; set; }
+        public string Bifurcation { get; set; }
+        public string Category { get; set; }
+        public string ChProducts { get; set; }
+        public DateTime? KAIDOJ { get; set; }
+        public string Grade { get; set; }
+        public string Designation { get; set; }
+        public string RMCode { get; set; }
+        public string SMCode { get; set; }
+        public DateTime? DOBRecd { get; set; }
+        public DateTime? DOBActual { get; set; }
+        public int Age { get; set; }
+        public string Gender { get; set; }
+        public DateTime?  ProbationPeriod { get; set; }
+        public DateTime? ConfirmedDate { get; set; }
+        public string PermaneedAddress { get; set; }
+        public string PresentedAddress { get; set; }
+        public string BloodGroup { get; set; }
+        public string EmergalContactNumber { get; set; }
+        public string PANNo { get; set; }
+        public string BankName { get; set; }
+        public string BankAccno { get; set; }
+        public string IFSC { get; set; }
+        public string MaritialStatus { get; set; }
+        public DateTime? MarriageDate { get; set; }
+        public string ContactNo { get; set; }
+        public string OfficalContactNo { get; set; }
+        public string OfficialMailId { get; set; }
+        public string PersonalMailId { get; set; }
+        public string FatherName { get; set; }
+        public string MotherName { get; set; }
+        public string WifeName { get; set; }
+        public string HusbandName { get; set; }
+        public int ChildrenCnt { get; set; }
+        public int RegCourseCnt { get; set; }
+        public int PartCourseCnt { get; set; }
+        public string PrevCompany { get; set; }
+        public string PrevCompDesg { get; set; }
+        public int PrevExp { get; set; }
+        public int KAIExp { get; set; }
+        public int TotalExp { get; set; }
+        public DateTime? ResignationDate { get; set; }
+        public DateTime? RelievingDate { get; set; }
+        public string PFNo { get; set; }
+        public string UANNo { get; set; }
+        public string AadharName { get; set; }
+        public string AadharNo { get; set; }
+        public string ResignationType { get; set; }
+        public DateTime? MinDoj { get; set; }
+        public DateTime? MaxDoe { get; set; }
+    }
     public class EmployeeBankDto
     {
         public string EmployeeBankId { get; set; }

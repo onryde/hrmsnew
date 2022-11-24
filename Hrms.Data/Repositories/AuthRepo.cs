@@ -415,27 +415,29 @@ namespace Hrms.Data.Repositories
                 .Include(var => var.EmployeeCompanyEmployee)
                 //.FirstOrDefault(var => var.EmailId.Equals(request.EmailId) && var.IsActive);
                 .FirstOrDefault(var => var.EmployeeCompanyEmployee.FirstOrDefault().EmployeeCode.Equals(request.EmployeeCode) && var.IsActive);
+            
             if (employee == null)
             {
                 return new BaseResponse
                 {
-                    IsSuccess = true
+                    IsSuccess = true,
+                    ErrorMessage = "Invalid"
                 };
             }
-
+            
             var tempPassword = RandomString.GetRandomString(8);
             var password = Cryptography.Encrypt(tempPassword, employee.PasswordSalt);
             employee.IsTemporaryPasswordSet = true;
             employee.TemporaryPassword = password;
 
             var empCompanyResigned = employee.EmployeeCompanyEmployee.Any() ? employee.EmployeeCompanyEmployee.FirstOrDefault().IsResigned : null;
+
             if(empCompanyResigned == null || !empCompanyResigned.Value)
             {
                 employee.CanLogin = true;
             }
             
             
-
             _eventLogRepo.AddAuditLog(new AuditInfo
             {
                 AuditText = string.Format(EventLogActions.ForgotPassword.Template, employee.Name, employee.Guid),
@@ -454,7 +456,8 @@ namespace Hrms.Data.Repositories
 
             return new BaseResponse
             {
-                IsSuccess = true
+                IsSuccess = true,
+                ErrorMessage = ""
             };
         }
 

@@ -67,6 +67,16 @@ namespace Hrms.Helper.Models.ResponseModels
         public List<CTCrptDto> EmployeeCTCDetails { get; set; }
 
     }
+    public class EmployeeRptCompensationResponse : BaseResponse
+    {
+        public List<CompensationrptDto> EmployeeCompensationDetails { get; set; }
+
+    }
+    public class EmployeeRptMasterResponse : BaseResponse
+    {
+        public List<EmpMasterrptDto> EmployeeRptMasterDetails { get; set; }
+
+    }
 
     public class EmployeeRehireResponse : BaseResponse
     {
