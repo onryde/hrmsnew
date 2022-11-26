@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
+
 namespace Hrms.Helper.StaticClasses
 {
     public static class Cryptography
@@ -27,6 +28,22 @@ namespace Hrms.Helper.StaticClasses
             }
             return clearText;
         }
+
+        public static string Encryptsso(string text,string key1)
+        {
+            RijndaelManaged Aes = new RijndaelManaged();
+            Aes.BlockSize = 128;
+            Aes.KeySize = 256;
+            Aes.IV = Encoding.UTF8.GetBytes("5p*/2_4eSdtl3q#9!");
+            Aes.Key = Encoding.UTF8.GetBytes(key1);
+            Aes.Mode = CipherMode.CBC;
+            Aes.Padding = PaddingMode.ISO10126;
+            byte[] src = Encoding.Unicode.GetBytes(text);
+            ICryptoTransform encrypt = Aes.CreateEncryptor();
+            byte[] dest = encrypt.TransformFinalBlock(src, 0, src.Length);
+            return Convert.ToBase64String(dest);
+        }
+
         public static string Decrypt(string cipherText, string key)
         {
             cipherText = cipherText.Replace(" ", "+");

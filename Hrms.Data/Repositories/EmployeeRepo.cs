@@ -16,6 +16,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace Hrms.Data.Repositories
 {
@@ -1506,6 +1507,34 @@ namespace Hrms.Data.Repositories
                 IsSuccess = true,
                 HrAccess = hrAccess,
                 EmployeeRptMasterDetails = combine
+            };
+        }
+
+        public EmployeeSSOResponse ssoInsuranceLink(EmployeeListFilterRequest request)
+        {
+            string key = "FER,BPY09)23IEYN_MJ*$EGREO719L/Q";
+            var GRPCode = Cryptography.Encryptsso("KAI", key);
+            var BrokerCode = Cryptography.Encryptsso("PION", key);
+            var EmployeeCode = Cryptography.Encryptsso(request.Code, key);
+            string encString = "GC=" + GRPCode + "&BC=" + BrokerCode + "&EC=" + EmployeeCode;
+            _eventLogRepo.AddAuditLog(new AuditInfo
+            {
+                AuditText = string.Format(EventLogActions.GetAllEmployees.Template, request.UserName, request.UserId),
+                PerformedBy = request.UserIdNum,
+                ActionId = EventLogActions.GetAllEmployees.ActionId,
+                Data = JsonConvert.SerializeObject(new
+                {
+                    userId = request.UserId,
+                    userName = request.UserName
+                })
+            });
+
+            Save();
+
+            return new EmployeeSSOResponse
+            {
+                IsSuccess = true,
+                SSOLink = encString
             };
         }
         public EmployeeRptResignedResponse GetEmployeeRptResigned(EmployeeReportFilterRequest request)

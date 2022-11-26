@@ -77,6 +77,13 @@ namespace Hrms.Helper.Models.ResponseModels
         public List<EmpMasterrptDto> EmployeeRptMasterDetails { get; set; }
 
     }
+    public class EmployeeSSOResponse : BaseResponse
+    {
+        public string GroupCode { get; set; }
+        public string BrokerCode { get; set; }
+        public string EmpCode { get; set; }
+        public string SSOLink { get; set; }
+    }
 
     public class EmployeeRehireResponse : BaseResponse
     {

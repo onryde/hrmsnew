@@ -49,6 +49,7 @@ namespace Hrms.Data.Interfaces
         EmployeeRptCTCResponse GetEmployeeRptCTC(EmployeeReportFilterRequest request);
         EmployeeRptCompensationResponse GetEmployeeRptCompensation(EmployeeReportFilterRequest request);
         EmployeeRptMasterResponse GetEmployeeRptMaster(EmployeeReportFilterRequest request);
+        EmployeeSSOResponse ssoInsuranceLink(EmployeeListFilterRequest request);
         EmployeeRehireResponse GetEmployeeRehire(EmployeeListFilterRequest request);
         GetEmployeeAccountResponse GetEmployeeAccount(EmployeeActionRequest request);
         GetEmployeePersonalResponse GetEmployeePersonal(EmployeeActionRequest request);
