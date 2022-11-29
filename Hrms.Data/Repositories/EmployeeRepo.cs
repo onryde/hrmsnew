@@ -4385,6 +4385,19 @@ namespace Hrms.Data.Repositories
                 .FirstOrDefault(var => var.IsActive && var.Guid.Equals(request.EmployeeId));
             if (employee != null)
             {
+                var isManager = employee.EmployeeCompanyReportingTo != null && employee.EmployeeCompanyReportingTo.Any();
+                var role = employee.RoleId;
+                var empid = request.UserIdNum;
+
+                var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
+                var hrAccess = hrcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(2) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid)).FirstOrDefault().CanAccess : 0;
+
+                var mgcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(1));
+                var mgAccess = mgcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(1)).FirstOrDefault().CanAccess : 0;
+
+                var empcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0));
+                var empAccess = empcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0)).FirstOrDefault().CanAccess : 0;
+
                 var statutory = employee.EmployeeStatutoryEmployee.FirstOrDefault();
                 if (statutory != null)
                 {
@@ -4402,19 +4415,7 @@ namespace Hrms.Data.Repositories
 
                     Save();
 
-                    var isManager = employee.EmployeeCompanyReportingTo != null && employee.EmployeeCompanyReportingTo.Any();
-                    var role = employee.RoleId;
-                    var empid = request.UserIdNum;
-
-                    var hrcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(2) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid));
-                    var hrAccess = hrcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(2) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0) && a.EmployeeId.Equals(empid)).FirstOrDefault().CanAccess : 0;
-
-                    var mgcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(1));
-                    var mgAccess = mgcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(1)).FirstOrDefault().CanAccess : 0;
-
-                    var empcnt = dbContext.SettingsModuleAccess.Count(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0));
-                    var empAccess = empcnt != 0 ? dbContext.SettingsModuleAccess.Where(a => a.RoleId.Equals(3) && a.ModuleID.Equals(4) && a.Ismanager.Equals(0)).FirstOrDefault().CanAccess : 0;
-
+                    
                     return new GetEmployeeStatutoryResponse
                     {
                         IsSuccess = true,
@@ -4439,7 +4440,10 @@ namespace Hrms.Data.Repositories
 
                 return new GetEmployeeStatutoryResponse
                 {
-                    IsSuccess = true
+                    IsSuccess = true,
+                    HrAccess = hrAccess,
+                    MgAccess = mgAccess,
+                    EmpAccess = empAccess
                 };
             }
 

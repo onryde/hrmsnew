@@ -789,7 +789,7 @@ namespace Hrms.Data.Repositories
             training.IsCompleted = true;
             Save();
 
-            var nominees = training.TrainingNominees.Where(var => !var.IsRejected && (var.HrAccepted ?? false))
+            var nominees = training.TrainingNominees.Where(var => !var.IsRejected && var.TrainingAttendance.FirstOrDefault().HasAttended ==true  && (var.HrAccepted ?? false))
                 .ToList();
             foreach (var nominee in nominees)
             {
